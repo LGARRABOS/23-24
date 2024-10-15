@@ -56,4 +56,4 @@
 
 # Page d'accueil du serveur web
 
-![alt text](image-1.png)
+![alt text](image.png)
