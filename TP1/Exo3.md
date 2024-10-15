@@ -6,6 +6,10 @@
 
 ## Configuration de l'instance EC2
 
+La premiére étape et de chosir la région dans laquelle vous allez créer votre instance EC2. Pour cela rendez vous sur votre console AWS et cliquez sur le menu déroulant en haut à droite de la page. Choisissez la région de Europe (Stockholm).
+
+![alt text](image-11.png)
+
 Pour commencer rendez vous sur votre console AWS et cliquez sur le service EC2.
 Ensuite cliquez sur le bouton "Launch Instance" pour créer une nouvelle instance.
 ![Interface EC2](image-2.png)
