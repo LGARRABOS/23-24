@@ -55,3 +55,6 @@ Et pour vérifier que le serveur est bien installé entrer l'ip publique de votr
 
  ## Connexion à l'instance EC2 et installation d'Apache2
  Environ 2 minutes
+
+ ## Temps total
+Environ 7 minutes
