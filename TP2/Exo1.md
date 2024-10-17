@@ -153,3 +153,4 @@ Security Group par défaut:
 
 # Shéma réseau
 
+![alt text](Archiréseau.drawio.png)
