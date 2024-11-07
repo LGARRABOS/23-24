@@ -169,8 +169,8 @@ resource "aws_instance" "nextcloud" {
 
   user_data = <<-EOF
 #!/bin/bash
-yum update -y
-yum install -y amazon-efs-utils
+yaptum update -y
+apt install -y amazon-efs-utils
 mkdir -p /mnt/efs
 mount -t efs -o tls ${aws_efs_file_system.efs.id}:/ /mnt/efs
 echo "${aws_efs_file_system.efs.id}:/ /mnt/efs efs _netdev,tls 0 0" >> /etc/fstab
