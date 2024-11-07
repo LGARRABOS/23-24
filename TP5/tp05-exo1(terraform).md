@@ -56,6 +56,7 @@ resource "aws_nat_gateway" "nat_gateway" {
 }
 
 resource "aws_efs_file_system" "efs" {
+  creation_token = "lgarrabos-tp"
   encrypted = true
 
   tags = merge(local.tags, {
