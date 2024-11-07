@@ -27,15 +27,15 @@ sudo chmod 777 /mnt/efs
 Pour valider la résilience et la continuité des données stockées sur EFS, la procédure suivante a été mise en place :
 
 1. **Création d'un Fichier sur le Montage EFS** :
-   - Connexion à l'instance EC2 "Nextcloud" via le bastion($ ssh -i ssh/nextcloud -o "ProxyCommand=ssh -W %h:%p -i ssh/bastion ec2-user@<IP DU NEXTCLOUD>" ec2-user@<IP DU BASTION>) .
-   - Création d'un fichier de test dans le répertoire monté EFS (`/mnt/efs/test_file.txt`).
+   - Connexion à l'instance EC2 "Nextcloud" via le bastion `ssh -i ssh/nextcloud -o "ProxyCommand=ssh -W %h:%p -i ssh/bastion ec2-user@<IP DU NEXTCLOUD>" ec2-user@<IP DU BASTION>` .
+   - Création d'un fichier de test dans le répertoire monté EFS (`echo "Test file content" > /mnt/efs/test_file.txt`).
 
 2. **Simulation d'une Panne d'AZ** :
    - Modification du sous-réseau de l'instance EC2 "Nextcloud" pour la déployer dans un autre sous-réseau (situé dans une autre zone de disponibilité - AZ).
    - Déploiement d'une nouvelle instance EC2 en utilisant `terraform apply` (L'ancienne instance EC2 est automatiquement supprimer par terraform qui vas en déployer une nouvelle à la place).
 
 3. **Vérification de l'Accès aux Données** :
-   - Connexion à la nouvelle instance EC2 "Nextcloud" via le bastion($ ssh -i ssh/nextcloud -o "ProxyCommand=ssh -W %h:%p -i ssh/bastion ec2-user@<IP DU NEXTCLOUD>" ec2-user@<IP DU BASTION>).
+   - Connexion à la nouvelle instance EC2 "Nextcloud" via le bastion `ssh -i ssh/nextcloud -o "ProxyCommand=ssh -W %h:%p -i ssh/bastion ec2-user@<IP DU NEXTCLOUD>" ec2-user@<IP DU BASTION>` .
    - Vérification de la présence du fichier de test sur le montage EFS (`cat /mnt/efs/test_file.txt`).
 
 ## 3. Conclusions du Proof of Concept (POC)
