@@ -29,22 +29,21 @@ INSERT INTO testtable VALUES (1, 'John');
 
 ## 3. Procédure de test de failover
 
-Pour tester la résilience de la base de données, on va simuler une panne de l'instance RDS en arrêtant l'instance manuellement. Voici les étapes à suivre :
+Pour tester la résilience de la base de données, on va simuler une panne de l'instance RDS en arrêtant relancant l'instance manuellement. Voici les étapes à suivre :
 
 1. Se connecter à la console AWS et trouver l'instance RDS à arrêter.
-2. Arrêter l'instance RDS en utilisant l'option "Stop instance".
-3. Attendre quelques minutes pour que l'instance soit arrêtée.
-4. Vérifier l'état de l'instance pour confirmer qu'elle est bien arrêtée.
+2. Activer le redémarrage de l'instance en cliquant sur "Reboot".
+3. Cocher l'options "Force failover" pour forcer le basculement de l'instance.
+4. Vérifier l'état de l'instance pour confirmer qu'elle est bien en redémarage.
 5. Se connecter à l'instance EC2 Nextcloud et essayer de se connecter à la base de données.
 ![alt text](image-2.png)
 
 ## 4. Résultats du test de failover
 
-Après avoir arrêté l'instance RDS, on constate que l'instance EC2 Nextcloud n'arrive plus à se connecter à la base de données. Cela confirme que la panne de l'instance RDS a impacté la disponibilité de la base de données.
-Une fois l'instance RDS redémarrée, l'instance EC2 Nextcloud peut à nouveau se connecter à la base de données sans perte de données.
+Pendant le redémarrage de l'instance RDS, on à pu constater que l'instance EC2 Nextcloud était toujours en mesure de se connecter à la base de données grace au failover automatique.) 
 
 ![alt text](image-3.png)
 
 ## 5. Conclusion
 
-Ce test de failover a permis de valider la résilience de la base de données RDS face à une panne de l'instance. En redémarrant l'instance RDS, on a pu rétablir l'accès à la base de données sans perte de données. Cela démontre l'efficacité de RDS comme solution de base de données cloud pour assurer la disponibilité et la continuité des services.
+Ce test de failover a permis de confirmer que l'instance EC2 Nextcloud est bien configurée pour supporter les pannes de l'instance RDS. Le failover automatique a bien fonctionné nous avons pu nous connecter à la base de données sans problème pendant le redémarrage de l'instance RDS.
