@@ -36,6 +36,7 @@ Pour tester la résilience de la base de données, on va simuler une panne de l'
 3. Cocher l'options "Force failover" pour forcer le basculement de l'instance.
 4. Vérifier l'état de l'instance pour confirmer qu'elle est bien en redémarage.
 5. Se connecter à l'instance EC2 Nextcloud et essayer de se connecter à la base de données.
+![alt text](image-4.png)
 ![alt text](image-2.png)
 
 ## 4. Résultats du test de failover
