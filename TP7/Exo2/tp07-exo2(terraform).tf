@@ -221,24 +221,6 @@ resource "aws_instance" "bastion" {
   })
 }
 
-
-resource "aws_instance" "nextcloud" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.private_subnet[1].id
-  key_name                    = aws_key_pair.nextcloud.key_name
-  associate_public_ip_address = false
-
-  vpc_security_group_ids = [aws_security_group.nextcloud_sg.id]
-
-  user_data = local.nextcloud_userdata
-
-  tags = merge(local.tags, {
-    Name = "lgarrabos-tp04-ex02-nextcloud"
-  })
-}
-
-
 resource "aws_lb_target_group" "nextcloud_target_group" {
   name     = "${local.name}-nextcloud-tg"
   port     = 80
@@ -249,13 +231,6 @@ resource "aws_lb_target_group" "nextcloud_target_group" {
     Name = "${local.name}-nextcloud-tg"
   })
 }
-
-resource "aws_lb_target_group_attachment" "nextcloud_attachment" {
-  target_group_arn = aws_lb_target_group.nextcloud_target_group.arn
-  target_id        = aws_instance.nextcloud.id
-  port             = 80
-}
-
 
 resource "aws_security_group" "bastion_sg" {
   name        = "${local.name}-bastion-sg"
