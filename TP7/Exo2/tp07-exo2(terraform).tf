@@ -364,8 +364,8 @@ resource "aws_launch_template" "nextcloud_lt" {
   key_name = aws_key_pair.nextcloud.key_name
 
   network_interfaces {
-    subnet_id         = aws_subnet.private_subnet[1].id
-    security_groups   = [aws_security_group.nextcloud_sg.id]
+    subnet_id                   = aws_subnet.private_subnet[1].id
+    security_groups             = [aws_security_group.nextcloud_sg.id]
     associate_public_ip_address = false
   }
 
@@ -376,7 +376,7 @@ resource "aws_launch_template" "nextcloud_lt" {
     resource_type = "instance"
 
     tags = {
-      Name = "lgarrabos"
+      Name  = "lgarrabos"
       Owner = "lgarrabos"
     }
   }
@@ -384,7 +384,7 @@ resource "aws_launch_template" "nextcloud_lt" {
     resource_type = "volume"
 
     tags = {
-      Name = "lgarrabos"
+      Name  = "lgarrabos"
       Owner = "lgarrabos"
     }
   }
@@ -392,7 +392,7 @@ resource "aws_launch_template" "nextcloud_lt" {
     resource_type = "network-interface"
 
     tags = {
-      Name = "lgarrabos"
+      Name  = "lgarrabos"
       Owner = "lgarrabos"
     }
   }
@@ -400,11 +400,11 @@ resource "aws_launch_template" "nextcloud_lt" {
 }
 
 resource "aws_autoscaling_group" "nextcloud_asg" {
-  name               = "${local.user}-tp7-nextcloud"
-  max_size           = 1
-  min_size           = 1
-  desired_capacity   = 1
-  health_check_type  = "ELB"
+  name                      = "${local.user}-tp7-nextcloud"
+  max_size                  = 1
+  min_size                  = 1
+  desired_capacity          = 1
+  health_check_type         = "ELB"
   health_check_grace_period = 300
 
   launch_template {
@@ -412,7 +412,7 @@ resource "aws_autoscaling_group" "nextcloud_asg" {
     version = "$Latest"
   }
 
-  vpc_zone_identifier = aws_subnet.private_subnet[*].id 
+  vpc_zone_identifier = aws_subnet.private_subnet[*].id
 
   target_group_arns = [aws_lb_target_group.nextcloud_target_group.arn]
 
@@ -421,7 +421,7 @@ resource "aws_autoscaling_group" "nextcloud_asg" {
     value               = local.user
     propagate_at_launch = false
   }
-    tag {
+  tag {
     key                 = "Name"
     value               = "${local.user}-tp7-nextcloud-instance"
     propagate_at_launch = true
