@@ -367,6 +367,8 @@ resource "aws_db_instance" "nextcloud_db" {
   })
 }
 
+### TP7 - Exo 2 - Nextcloud ###
+
 data "aws_ami" "nextcloud" {
   most_recent = true
 
@@ -453,6 +455,152 @@ resource "aws_autoscaling_group" "nextcloud_asg" {
     value               = "${local.user}-tp7-nextcloud-instance"
     propagate_at_launch = true
   }
+}
+
+### TP8 - Exo 1 - Nextcloud ###
+
+resource "aws_autoscaling_policy" "scale_in" {
+  name                   = "${local.user}-tp8-nextcloud-scalein"
+  scaling_adjustment     = -1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300
+  autoscaling_group_name = aws_autoscaling_group.nextcloud_asg.name
+}
+
+resource "aws_autoscaling_policy" "scale_out" {
+  name                   = "${local.user}-tp8-nextcloud-scaleout"
+  scaling_adjustment     = 1
+  adjustment_type        = "ChangeInCapacity"
+  cooldown               = 300
+  autoscaling_group_name = aws_autoscaling_group.nextcloud_asg.name
+}
+
+###
+resource "aws_cloudwatch_metric_alarm" "scale_out_alarm" {
+  alarm_name          = "${local.user}-tp8-nextcloud-asg-scaleout"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "RequestCountPerTarget"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 1000
+  dimensions = {
+    TargetGroup = aws_lb_target_group.nextcloud_target_group.arn_suffix
+  }
+  alarm_actions       = [aws_autoscaling_policy.scale_out.arn]
+
+  tags = merge(local.tags, {
+    Name = "${local.user}-tp8-nextcloud-asg-scaleout"
+  })
+}
+
+resource "aws_cloudwatch_metric_alarm" "scale_in_alarm" {
+  alarm_name          = "${local.user}-tp8-nextcloud-asg-scalein"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "RequestCountPerTarget"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 400
+  dimensions = {
+    TargetGroup = aws_lb_target_group.nextcloud_target_group.arn_suffix
+  }
+  alarm_actions       = [aws_autoscaling_policy.scale_in.arn]
+
+  tags = merge(local.tags, {
+    Name = "${local.user}-tp8-nextcloud-asg-scalein"
+  })
+}
+
+resource "aws_cloudwatch_dashboard" "nextcloud" {
+  dashboard_name = "${local.name}-nextcloud-asg"
+  dashboard_body = jsonencode(
+    {
+      periodOverride = "inherit"
+      start          = "-PT30M"
+      widgets = [
+        {
+          height = 6
+          properties = {
+            legend = {
+              position = "bottom"
+            }
+            liveData = true
+            metrics = [
+              [
+                "AWS/AutoScaling",
+                "GroupInServiceInstances",
+                "AutoScalingGroupName",
+                aws_autoscaling_group.nextcloud_asg.name,
+                {
+                  color = "#2ca02c"
+                  label = "InServiceInstances"
+                },
+              ],
+              [
+                ".",
+                "GroupTerminatingInstances",
+                ".",
+                ".",
+                {
+                  color = "#d62728"
+                  label = "TerminatingInstances"
+                },
+              ],
+            ]
+            period = 60
+            region = "eu-north-1"
+            stat   = "Average"
+            title  = "ASG - In Service/Terminating Instances"
+          }
+          type  = "metric"
+          width = 24
+          x     = 0
+          y     = 0
+        },
+        {
+          height = 6
+          properties = {
+            annotations = {
+              horizontal = [
+                {
+                  color = "#2ca02c"
+                  label = "Add Instance"
+                  value = 1000
+                },
+                {
+                  color = "#d62728"
+                  label = "Remove Instance"
+                  value = 400
+                },
+              ]
+            }
+            legend = {
+              position = "bottom"
+            }
+            metrics = [
+              [
+                "AWS/ApplicationELB",
+                "RequestCountPerTarget",
+                "TargetGroup",
+                aws_lb_target_group.nextcloud_target_group.arn_suffix,
+              ],
+            ]
+            period = 60
+            region = "eu-north-1"
+            stat   = "Sum"
+            title  = "ALB - Request Count Per Target"
+          }
+          type  = "metric"
+          width = 24
+          x     = 0
+          y     = 6
+        },
+      ]
+    }
+  )
 }
 
 ### TP9 - Exo 1 - Nextcloud ###
