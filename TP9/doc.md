@@ -62,11 +62,10 @@ L'équilibreur de charge applicatif s'étend sur plusieurs zones de disponibilit
 
 14. Contraintes Liées à l'Élasticité de l'Application
 
-Bien que la configuration actuelle n'inclue pas de mise à l'échelle automatique, l'utilisation d'un ALB et d'un balisage cohérent prépare le terrain pour une élasticité future.
 
 15. Contraintes Liées à la Scalabilité de l'Application
 
-L'architecture prend en charge la scalabilité en ajoutant plus d'instances EC2 au groupe cible de l'ALB pour gérer une charge accrue.
+
 
 16. Contraintes Liées à l'Authentification des Instances EC2 aux API AWS
 

@@ -213,6 +213,7 @@ resource "aws_instance" "bastion" {
   subnet_id                   = aws_subnet.public_subnet[0].id
   key_name                    = aws_key_pair.bastion.key_name
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.nextcloud_instance_profile.name
 
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
 
@@ -220,6 +221,25 @@ resource "aws_instance" "bastion" {
     Name = "lgarrabos-tp04-ex02-bastion"
   })
 }
+
+
+resource "aws_instance" "nextcloud" {
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.private_subnet[1].id
+  key_name                    = aws_key_pair.nextcloud.key_name
+  associate_public_ip_address = false
+  iam_instance_profile        = aws_iam_instance_profile.nextcloud_instance_profile.name
+
+  vpc_security_group_ids = [aws_security_group.nextcloud_sg.id]
+
+  user_data = local.nextcloud_userdata
+
+  tags = merge(local.tags, {
+    Name = "lgarrabos-tp04-ex02-nextcloud"
+  })
+}
+
 
 resource "aws_lb_target_group" "nextcloud_target_group" {
   name     = "${local.name}-nextcloud-tg"
@@ -232,6 +252,13 @@ resource "aws_lb_target_group" "nextcloud_target_group" {
   })
 }
 
+resource "aws_lb_target_group_attachment" "nextcloud_attachment" {
+  target_group_arn = aws_lb_target_group.nextcloud_target_group.arn
+  target_id        = aws_instance.nextcloud.id
+  port             = 80
+}
+
+
 resource "aws_security_group" "bastion_sg" {
   name        = "${local.name}-bastion-sg"
   description = "Security group for bastion host"
@@ -241,7 +268,7 @@ resource "aws_security_group" "bastion_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["13.38.14.53/32"] # IP de l'instance cloud9 de l'utilisateur
+    cidr_blocks = ["35.180.91.19/32"] # IP de l'instance cloud9 de l'utilisateur
   }
 
   egress {
@@ -340,94 +367,120 @@ resource "aws_db_instance" "nextcloud_db" {
   })
 }
 
-data "aws_ami" "nextcloud" {
-  most_recent = true
+### TP9 - Exo 1 - Nextcloud ###
 
-  filter {
-    name   = "name"
-    values = ["lgarrabos-tp7-nextcloud-*"]
-  }
-
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
-
-  owners = ["self"]
+resource "aws_kms_key" "mykey" {
+  description             = "This key is used to encrypt bucket objects"
+  deletion_window_in_days = 10
 }
+resource "aws_s3_bucket" "nextcloud_bucket" {
+  bucket = "lgarrabos-tp9-nextcloud"
 
-resource "aws_launch_template" "nextcloud_lt" {
-  name_prefix   = "lgarrabos-tp7-nextcloud-lt-"
-  image_id      = data.aws_ami.nextcloud.id
-  instance_type = "t3.micro"
-
-  key_name = aws_key_pair.nextcloud.key_name
-
-  network_interfaces {
-    subnet_id                   = aws_subnet.private_subnet[1].id
-    security_groups             = [aws_security_group.nextcloud_sg.id]
-    associate_public_ip_address = false
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.mykey.arn
+      sse_algorithm     = "aws:kms"
+      }
+    }
   }
 
   tags = merge(local.tags, {
-    Name = "lgarrabos"
+    Name = "lgarrabos-tp9-nextcloud"
   })
-  tag_specifications {
-    resource_type = "instance"
-
-    tags = {
-      Name  = "lgarrabos"
-      Owner = "lgarrabos"
-    }
-  }
-  tag_specifications {
-    resource_type = "volume"
-
-    tags = {
-      Name  = "lgarrabos"
-      Owner = "lgarrabos"
-    }
-  }
-  tag_specifications {
-    resource_type = "network-interface"
-
-    tags = {
-      Name  = "lgarrabos"
-      Owner = "lgarrabos"
-    }
-  }
-
 }
 
-resource "aws_autoscaling_group" "nextcloud_asg" {
-  name                      = "${local.user}-tp7-nextcloud"
-  max_size                  = 1
-  min_size                  = 1
-  desired_capacity          = 1
-  health_check_type         = "ELB"
-  health_check_grace_period = 300
+resource "aws_iam_role" "nextcloud_role" {
+  name               = "lgarrabos-tp9-nextcloud"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
 
-  launch_template {
-    id      = aws_launch_template.nextcloud_lt.id
-    version = "$Latest"
-  }
-
-  vpc_zone_identifier = aws_subnet.private_subnet[*].id
-
-  target_group_arns = [aws_lb_target_group.nextcloud_target_group.arn]
-
-  tag {
-    key                 = "Owner"
-    value               = local.user
-    propagate_at_launch = false
-  }
-  tag {
-    key                 = "Name"
-    value               = "${local.user}-tp7-nextcloud-instance"
-    propagate_at_launch = true
-  }
+  tags = merge(local.tags, {
+    Name = "lgarrabos-tp9-nextcloud"
+  })
 }
 
+
+resource "aws_iam_role_policy" "nextcloud_s3_policy" {
+  name   = "NextcloudS3Policy"
+  role   = aws_iam_role.nextcloud_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads"
+        ]
+        Resource = [
+          "arn:aws:s3:::lgarrabos-tp9-nextcloud"
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:AbortMultipartUpload",
+          "s3:ListMultipartUploadParts"
+        ]
+        Resource = [
+          "arn:aws:s3:::lgarrabos-tp9-nextcloud/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket_policy" "nextcloud_bucket_policy" {
+  bucket = aws_s3_bucket.nextcloud_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          AWS = aws_iam_role.nextcloud_role.arn
+        },
+        Action = [
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:AbortMultipartUpload",
+          "s3:ListMultipartUploadParts"
+        ],
+        Resource = [
+          "arn:aws:s3:::lgarrabos-tp9-nextcloud",
+          "arn:aws:s3:::lgarrabos-tp9-nextcloud/*"
+        ]
+      }
+    ]
+  })
+}
+
+
+resource "aws_iam_instance_profile" "nextcloud_instance_profile" {
+  name = "lgarrabos-tp9-nextcloud"
+  role = aws_iam_role.nextcloud_role.name
+
+  tags = merge(local.tags, {
+    Name = "lgarrabos-tp9-nextcloud"
+  })
+}
 
 output "nextcloud_fqdn" {
   value       = aws_route53_record.nextcloud.name
@@ -438,4 +491,3 @@ output "nextcloud_fqdn" {
 data "aws_availability_zones" "available" {
   state = "available"
 }
-
