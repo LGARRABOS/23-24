@@ -8,11 +8,11 @@ Une passerelle NAT dans un sous-réseau public fournit un accès Internet pour l
 
 Une convention de nommage cohérente utilisant local.name garantit que toutes les ressources suivent le format <username>-<project>.
 
-Les balises "Name" et "Owner" sont appliquées à toutes les ressources en utilisant local.tags pour qu'elles soient toute taguées de manière identique.
+Les balises "Name" et "Owner" sont appliquées à toutes les ressources en utilisant local.tags pour qu'elles soient toute taguées de manière identique afin de retrouver efficacement quelles ressource appartiens à quelle utilisateur.
 
 3. Contraintes Liées à l'Authentification SSH sur les Instances EC2
 
-Des paires de clés distinctes (aws_key_pair.bastion et aws_key_pair.nextcloud) sont utilisées pour le bastion et les instances Nextcloud, améliorant la sécurité.
+Des paires de clés distinctes (aws_key_pair.bastion et aws_key_pair.nextcloud) sont utilisées pour le bastion et les instances Nextcloud, améliorant la sécurité, le direct connect est désactiver, la connexion ne peut s'effectuer que via ses clef ssh.
 
 4. Contraintes Liées à l'Accessibilité SSH de l'Hôte Bastion
 
@@ -40,7 +40,7 @@ Les points de montage pour l'EFS (aws_efs_mount_target) sont déployés dans cha
 
 9. Contraintes Liées à la Haute Disponibilité du Système de Fichiers Partagé
 
-Les points de montage EFS dans plusieurs sous-réseaux garantissent la redondance et la haute disponibilité.
+Les points de montage EFS dans plusieurs sous-réseaux et dans plusieurs AZ garantissent la redondance et la haute disponibilité.
 
 10. Contraintes Liées à l'Accessibilité de la Base de Données
 
@@ -50,7 +50,7 @@ Le groupe de sécurité de la base de données (aws_security_group.nextcloud_db_
 
 11. Contraintes Liées à la Haute Disponibilité de la Base de Données
 
-L'instance RDS (aws_db_instance.nextcloud_db) est configurée avec multi_az = true, permettant un basculement automatique en cas de panne de zone.
+L'instance RDS (aws_db_instance.nextcloud_db) est configurée avec multi_az = true, permettant un basculement automatique sur une autre AZ en cas de panne de zone.
 
 12. Contraintes Liées à l'Accessibilité de l'Application Nextcloud
 
@@ -65,7 +65,7 @@ L'équilibreur de charge applicatif s'étend sur plusieurs zones de disponibilit
 
 15. Contraintes Liées à la Scalabilité de l'Application
 
-
+L'architecture prend en charge la scalabilité en ajoutant plus d'instances EC2 au groupe cible de l'ALB. L'ALB distribue automatiquement le trafic vers les nouvelles instances ajoutées. Un systéme de monitoring est mis en place pour surveiller les performances et l'utilisation des ressources et ainsi adapter le nombre d'instances en fonction de la charge. (augmentation ou diminution du nombre d'instances en fonction de la charge).
 
 16. Contraintes Liées à l'Authentification des Instances EC2 aux API AWS
 
